@@ -33,10 +33,13 @@ function plot_fuzzy_ss_clusters!(ax, centers, weights)
     scatter!(ax, steady_states[1, :], steady_states[2, :], color=get_colours(weights));
 end
 
-# fuzzy_clusters, steady_states = get_fuzzy_clusters(4)
-# centers, weights = fuzzy_clusters.centers, fuzzy_clusters.weights
+if @__FILE__() == abspath(PROGRAM_FILE)
+    fuzzy_clusters, steady_states = get_fuzzy_clusters(2; fuzziness = 2.5, reset_cache = true)
+    centers, weights = fuzzy_clusters.centers, fuzzy_clusters.weights
 
-# f = Figure()
-# ax = Axis(f[1, 1])
-# plot_fuzzy_ss_clusters!(ax, centers, weights)
-# f
+    f = Figure()
+    ax = Axis(f[1, 1])
+    plot_fuzzy_ss_clusters!(ax, centers, weights)
+    f
+end
+

@@ -3,6 +3,8 @@ using DifferentialEquations
 using DynamicAxisWarping, Distances
 using DataFrames
 
+include("get_steady_states.jl")
+
 function get_ode_time_series()
     if !isfile("Data/time_series.jld2")
         include("run_ensemble.jl")
@@ -14,6 +16,25 @@ function get_ode_time_series()
         time_series = load("Data/time_series.jld2")["time_series"]
     end
     return time_series
+end
+
+function get_steady_states()
+    if !isfile("Data/parameter_mesh.jld2") || !isfile("Data/steady_states.jld2")
+        println("Running simulations to get steady states")
+        parameter_mesh = make_parameter_mesh()
+        steady_states = run_ensemble_simulations(
+            make_steady_state_ensemble_problem(model, parameter_mesh),
+            length(parameter_mesh),
+        )
+        @save "Data/parameter_mesh.jld2" parameter_mesh
+        @save "Data/steady_states.jld2" steady_states
+    else
+        println("Loading steady states from saved state")
+        parameter_mesh = load("Data/parameter_mesh.jld2")["parameter_mesh"]
+        steady_states = load("Data/steady_states.jld2")["steady_states"]
+    end
+
+    return steady_states
 end
 
 function get_distance_matrix()
@@ -43,19 +64,9 @@ function get_time_series_clustering(n_clusters)
     return clusters, get_ode_time_series()
 end
 
-function get_steady_states()
-    if !isfile("Data/steady_states.jld2")
-        include("get_steady_states.jl")
-    else
-        steady_states = load("Data/steady_states.jld2")["steady_states"]
-    end
-    return steady_states
-end
-
-
-function get_crisp_clusters(n_clusters)
+function get_crisp_clusters(n_clusters, reset_cache=false)
     steady_states = get_steady_states()
-    if !isfile("Data/steady_state_$(n_clusters)_clusters.jld2")
+    if !isfile("Data/steady_state_$(n_clusters)_clusters.jld2") || reset_cache
         clusters = kmeans(steady_states, n_clusters)
         @save "Data/steady_state_$(n_clusters)_clusters.jld2" clusters
     else
@@ -66,9 +77,9 @@ end
 
 ## Fuzzy Cluster the steady states
 
-function get_fuzzy_clusters(n_clusters, fuzziness=4)
+function get_fuzzy_clusters(n_clusters; fuzziness=4, reset_cache=false)
     steady_states = get_steady_states()
-    if !isfile("Data/fuzzy_steady_state_$(n_clusters)_clusters.jld2")
+    if !isfile("Data/fuzzy_steady_state_$(n_clusters)_clusters.jld2") || reset_cache
         fuzz = fuzzy_cmeans(steady_states, n_clusters, fuzziness)
         @save "Data/fuzzy_steady_state_$(n_clusters)_clusters.jld2" fuzz
     else

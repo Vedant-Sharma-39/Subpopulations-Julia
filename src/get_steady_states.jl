@@ -1,12 +1,12 @@
 include("run_ensemble.jl")
 
 function get_param_ranges()
-    rx_range = 0.1:0.25:1.5
-    ry_range = 0.1:0.25:1.5
-    a_range = 0.1:0.25:1.0
-    b_range = 0.1:0.25:1.0
-    c_range = 1:0.5:5.0
-    d_range = 1:0.5:5.0
+    rx_range = 0.1:0.4:1.5
+    ry_range = 0.1:0.4:1.5
+    a_range = 0.1:0.2:1.0
+    b_range = 0.1:0.2:1.0
+    c_range = 1:1:5.0
+    d_range = 1:1:5.0
 
     return [rx_range, ry_range, a_range, b_range, c_range, d_range]
 end
@@ -23,15 +23,6 @@ function make_steady_state_ensemble_problem(
     ensemble_problem = EnsembleProblem(ssprob; prob_func=change_params_problem_function)
     return ensemble_problem
 end
-
-parameter_mesh = make_parameter_mesh()
-steady_states = run_ensemble_simulations(
-    make_steady_state_ensemble_problem(model, parameter_mesh), length(parameter_mesh)
-)
-
-@save "Data/parameter_mesh.jld2" parameter_mesh
-@save "Data/steady_states.jld2" steady_states
-
 
 # # Effect of perturbations on the different parameters on the steady states
 # # 1. Perturb the transition rates
